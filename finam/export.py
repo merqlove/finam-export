@@ -320,9 +320,15 @@ class Exporter(object):
 
     ERROR_THROTTLING = 'Forbidden: Access is denied'
 
-    def __init__(self, export_host=None, fetcher=fetch_url):
+    def __init__(self, custom_params=None, export_host=None, fetcher=fetch_url):
         self._meta = ExporterMeta(lazy=True)
         self._fetcher = fetcher
+
+        if custom_params is not None:
+            self._params = {**self.IMMUTABLE_PARAMS, **custom_params}
+        else:
+            self._params = self.IMMUTABLE_PARAMS
+
         if export_host is not None:
             self._export_host = export_host
         else:
@@ -331,7 +337,7 @@ class Exporter(object):
     def _build_url(self, params):
         url = ('http://{}/table.csv?{}&{}'
                .format(self._export_host,
-                       urlencode(self.IMMUTABLE_PARAMS),
+                       urlencode(self._params),
                        urlencode(params)))
         return url
 
@@ -354,11 +360,8 @@ class Exporter(object):
                  market,
                  start_date=datetime.date(2007, 1, 1),
                  end_date=None,
-                 timeframe=Timeframe.DAILY,
-                 custom_params=None):
+                 timeframe=Timeframe.DAILY):
 
-        if custom_params is None:
-            custom_params = {}
         items = self._meta.lookup(id_=id_, market=market)
         # i.e. for markets 91, 519, 2
         # id duplicates are feasible, looks like corrupt data on finam
@@ -387,9 +390,6 @@ class Exporter(object):
             # that differs for ticks only
             'datf': 6 if timeframe == Timeframe.TICKS.value else 5
         }
-
-        if custom_params is not None:
-            params = {**params, **custom_params}
 
         url = self._build_url(params)
         # deliberately not using pd.read_csv's ability to fetch
