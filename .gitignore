@@ -1,6 +1,7 @@
 *.pyc
 .coverage
 .noseids
+venv
 dist/
 build/
 .eggs/

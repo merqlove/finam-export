@@ -354,8 +354,11 @@ class Exporter(object):
                  market,
                  start_date=datetime.date(2007, 1, 1),
                  end_date=None,
-                 timeframe=Timeframe.DAILY):
+                 timeframe=Timeframe.DAILY,
+                 custom_params=None):
 
+        if custom_params is None:
+            custom_params = {}
         items = self._meta.lookup(id_=id_, market=market)
         # i.e. for markets 91, 519, 2
         # id duplicates are feasible, looks like corrupt data on finam
@@ -384,6 +387,9 @@ class Exporter(object):
             # that differs for ticks only
             'datf': 6 if timeframe == Timeframe.TICKS.value else 5
         }
+
+        if custom_params is not None:
+            params = {**params, **custom_params}
 
         url = self._build_url(params)
         # deliberately not using pd.read_csv's ability to fetch
