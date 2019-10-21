@@ -1,5 +1,6 @@
 # coding: utf-8
 import datetime
+from sys import version_info
 import logging
 import operator
 from enum import IntEnum
@@ -325,7 +326,10 @@ class Exporter(object):
         self._fetcher = fetcher
 
         if custom_params is not None:
-            self._params = {**self.IMMUTABLE_PARAMS, **custom_params}
+            if sys.version_info >= (3, 0):
+                self._params = {**self.IMMUTABLE_PARAMS, **custom_params}
+            else:
+                self._params = _merge_two_dicts(self.IMMUTABLE_PARAMS, custom_params)
         else:
             self._params = self.IMMUTABLE_PARAMS
 
@@ -351,6 +355,11 @@ class Exporter(object):
         if not all(c in data for c in '<>;'):
             raise FinamParsingError('Returned data doesnt seem like '
                                     'a valid csv dataset: {}'.format(data))
+
+    def _merge_two_dicts(x, y):
+        z = x.copy()   # start with x's keys and values
+        z.update(y)    # modifies z with y's keys and values & returns None
+        return z
 
     def lookup(self, *args, **kwargs):
         return self._meta.lookup(*args, **kwargs)
